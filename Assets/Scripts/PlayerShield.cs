@@ -1,0 +1,37 @@
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+/// <summary>
+/// Temporary damage reduction — one simple defensive layer for crowded waves.
+/// </summary>
+[RequireComponent(typeof(PlayerInput))]
+public class PlayerShield : MonoBehaviour
+{
+    [SerializeField] private float durationSeconds = 2.2f;
+    [SerializeField] private float cooldownSeconds = 9f;
+    [SerializeField] [Range(0f, 1f)] private float damageTakenMultiplierWhileActive = 0.45f;
+
+    private InputAction _shieldAction;
+    private float _shieldEndTime;
+    private float _nextAllowedTime;
+
+    public bool IsShieldActive => Time.time < _shieldEndTime;
+    public float DamageMultiplier => IsShieldActive ? damageTakenMultiplierWhileActive : 1f;
+    public float CooldownRemaining => Mathf.Max(0f, _nextAllowedTime - Time.time);
+
+    private void Awake()
+    {
+        _shieldAction = GetComponent<PlayerInput>().actions.FindActionMap("Player").FindAction("Shield", throwIfNotFound: false);
+    }
+
+    private void Update()
+    {
+        if (_shieldAction == null || Time.time < _nextAllowedTime)
+            return;
+        if (_shieldAction.WasPressedThisFrame())
+        {
+            _shieldEndTime = Time.time + durationSeconds;
+            _nextAllowedTime = Time.time + cooldownSeconds;
+        }
+    }
+}
