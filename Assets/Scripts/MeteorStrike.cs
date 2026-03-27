@@ -13,6 +13,7 @@ public class MeteorStrike : MonoBehaviour
     [SerializeField] private float meteorRadius = 4f;
     [SerializeField] private float meteorDamage = 35f;
     [SerializeField] private float meteorSpawnHeight = 14f;
+    [SerializeField] private float meteorBodyScale = 1.15f;
 
     [Header("Indicator")]
     [SerializeField] private Color indicatorColor = new Color(1f, 0.35f, 0.1f, 0.9f);
@@ -21,7 +22,6 @@ public class MeteorStrike : MonoBehaviour
     private bool _casting;
     private float _nextMeteorAllowedTime;
 
-    /// <summary>Seconds until meteor can be used again (for HUD).</summary>
     public float CooldownRemaining => Mathf.Max(0f, _nextMeteorAllowedTime - Time.time);
 
     private void Start()
@@ -37,24 +37,8 @@ public class MeteorStrike : MonoBehaviour
             return;
         if (Time.time < _nextMeteorAllowedTime)
             return;
-        if (_meteorAction.WasPressedThisFrame() && TryGetGroundPoint(out Vector3 groundPoint))
+        if (_meteorAction.WasPressedThisFrame() && MouseGroundUtility.TryGetMouseGroundPoint(out Vector3 groundPoint))
             StartCoroutine(MeteorRoutine(groundPoint));
-    }
-
-    private static bool TryGetGroundPoint(out Vector3 point)
-    {
-        point = default;
-        var cam = Camera.main;
-        if (cam == null || Mouse.current == null)
-            return false;
-
-        var ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
-        var plane = new Plane(Vector3.up, Vector3.zero);
-        if (!plane.Raycast(ray, out float enter))
-            return false;
-
-        point = ray.GetPoint(enter);
-        return true;
     }
 
     private IEnumerator MeteorRoutine(Vector3 groundPoint)
@@ -70,7 +54,15 @@ public class MeteorStrike : MonoBehaviour
         if (indRenderer != null)
             indRenderer.material.color = indicatorColor;
 
-        yield return new WaitForSeconds(windupSeconds);
+        float t = 0f;
+        var baseScale = indicator.transform.localScale;
+        while (t < windupSeconds)
+        {
+            t += Time.deltaTime;
+            float pulse = 1f + 0.04f * Mathf.Sin(t * 14f);
+            indicator.transform.localScale = baseScale * pulse;
+            yield return null;
+        }
 
         if (indicator != null)
             Object.Destroy(indicator);
@@ -78,14 +70,61 @@ public class MeteorStrike : MonoBehaviour
         var meteor = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         meteor.name = "Meteor";
         meteor.transform.position = groundPoint + Vector3.up * meteorSpawnHeight;
-        meteor.transform.localScale = Vector3.one * 0.85f;
+        meteor.transform.localScale = Vector3.one * meteorBodyScale;
+        ApplyMeteorLook(meteor);
+
         var rb = meteor.AddComponent<Rigidbody>();
         rb.useGravity = true;
-        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        rb.mass = 2.2f;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.angularVelocity = Random.insideUnitSphere * 1.8f;
+
+        var trail = meteor.AddComponent<TrailRenderer>();
+        trail.time = 0.4f;
+        trail.startWidth = meteorBodyScale * 0.85f;
+        trail.endWidth = meteorBodyScale * 0.12f;
+        trail.minVertexDistance = 0.2f;
+        trail.material = meteor.GetComponent<Renderer>().sharedMaterial;
+        trail.startColor = new Color(1f, 0.55f, 0.15f, 0.95f);
+        trail.endColor = new Color(0.4f, 0.1f, 0f, 0f);
 
         meteor.AddComponent<MeteorProjectile>().Configure(meteorDamage, meteorRadius);
 
         _nextMeteorAllowedTime = Time.time + meteorCooldown;
         _casting = false;
+    }
+
+    private static void ApplyMeteorLook(GameObject meteor)
+    {
+        var lit = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+        var outer = new Material(lit);
+        outer.name = "M_MeteorOuter_Runtime";
+        if (outer.HasProperty("_BaseColor"))
+            outer.SetColor("_BaseColor", new Color(0.1f, 0.09f, 0.1f));
+        if (outer.HasProperty("_Metallic"))
+            outer.SetFloat("_Metallic", 0.45f);
+        if (outer.HasProperty("_Smoothness"))
+            outer.SetFloat("_Smoothness", 0.38f);
+        outer.EnableKeyword("_EMISSION");
+        if (outer.HasProperty("_EmissionColor"))
+            outer.SetColor("_EmissionColor", new Color(0.95f, 0.32f, 0.08f) * 0.75f);
+
+        var r = meteor.GetComponent<Renderer>();
+        r.sharedMaterial = outer;
+
+        var core = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        core.name = "MeteorCore";
+        core.transform.SetParent(meteor.transform, false);
+        core.transform.localPosition = Vector3.zero;
+        core.transform.localScale = Vector3.one * 0.58f;
+        Object.Destroy(core.GetComponent<Collider>());
+
+        var inner = new Material(outer);
+        if (inner.HasProperty("_BaseColor"))
+            inner.SetColor("_BaseColor", new Color(1f, 0.42f, 0.1f));
+        if (inner.HasProperty("_EmissionColor"))
+            inner.SetColor("_EmissionColor", new Color(1f, 0.45f, 0.05f) * 2.2f);
+
+        core.GetComponent<Renderer>().sharedMaterial = inner;
     }
 }
