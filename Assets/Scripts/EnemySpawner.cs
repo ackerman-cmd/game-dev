@@ -29,8 +29,15 @@ public class EnemySpawner : MonoBehaviour
     private int _quota;
     private int _spawnedInWave;
 
+    private float _difficultyMultiplier = 1f;
+
     /// <summary>Current wave index (0 = before wave 1, then 1, 2, …).</summary>
     public int CurrentWave => _waveIndex;
+
+    public void SetDifficulty(float diff)
+    {
+        _difficultyMultiplier = diff;
+    }
 
     private void Awake()
     {
@@ -83,7 +90,8 @@ public class EnemySpawner : MonoBehaviour
     private void BeginSpawningWave()
     {
         _waveIndex++;
-        _quota = baseEnemiesInWave + (_waveIndex - 1) * extraEnemiesPerWave;
+        int quotaRaw = baseEnemiesInWave + (_waveIndex - 1) * extraEnemiesPerWave;
+        _quota = Mathf.RoundToInt(quotaRaw * _difficultyMultiplier);
         _spawnedInWave = 0;
         _phase = Phase.SpawningWave;
         _timer = 0f;

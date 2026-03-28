@@ -5,17 +5,35 @@ using UnityEngine.InputSystem;
 public class PlayerMovement : MonoBehaviour
 {
     [SerializeField] private float moveSpeed = 8f;
+    [SerializeField] private float jumpForce = 7f;
     [SerializeField] private Transform facingVisual;
-    [SerializeField] private float facingMinSpeed = 0.15f;
 
     private Rigidbody _rigidbody;
     private InputAction _moveAction;
+    private bool _isGrounded;
 
     private void Awake()
     {
         _rigidbody = GetComponent<Rigidbody>();
         var playerInput = GetComponent<PlayerInput>();
         _moveAction = playerInput.actions.FindActionMap("Player").FindAction("Move");
+        
+        // Physics settings for better climbing
+        _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+        _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+    }
+
+    private void Update()
+    {
+        if (Time.timeScale == 0f) return; // Prevent jump while paused
+
+        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame && _isGrounded)
+        {
+            Vector3 v = _rigidbody.linearVelocity;
+            _rigidbody.linearVelocity = new Vector3(v.x, 0f, v.z); // reset vertical before jump
+            _rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
+            _isGrounded = false; // Force jump unground
+        }
     }
 
     private void FixedUpdate()
@@ -23,14 +41,66 @@ public class PlayerMovement : MonoBehaviour
         if (_moveAction == null)
             return;
 
-        Vector2 input = _moveAction.ReadValue<Vector2>();
-        Vector3 move = new Vector3(input.x, 0f, input.y);
-        if (move.sqrMagnitude > 1f)
-            move.Normalize();
+        // SphereCast is much more reliable for detecting ground on ramps than a thin Raycast.
+        RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up * 0.5f, 0.4f, Vector3.down, 0.8f);
+        _isGrounded = false;
+        RaycastHit groundHit = default;
+        float highestY = -999f;
+        
+        foreach (var h in hits)
+        {
+            // Ignore triggers and the player itself
+            if (!h.collider.isTrigger && h.collider.gameObject != gameObject && !h.collider.transform.IsChildOf(transform))
+            {
+                if (h.point.y > highestY)
+                {
+                    highestY = h.point.y;
+                    _isGrounded = true;
+                    groundHit = h;
+                }
+            }
+        }
 
-        Vector3 targetVelocity = move * moveSpeed;
-        Vector3 v = _rigidbody.linearVelocity;
-        _rigidbody.linearVelocity = new Vector3(targetVelocity.x, v.y, targetVelocity.z);
+        Vector2 input = _moveAction.ReadValue<Vector2>();
+        Vector3 move;
+        if (GameplayModeController.Instance != null && GameplayModeController.Instance.IsFirstPerson)
+            move = GameplayModeController.Instance.GetFirstPersonPlanarMove(input);
+        else
+        {
+            move = new Vector3(input.x, 0f, input.y);
+            if (move.sqrMagnitude > 1f)
+                move.Normalize();
+        }
+
+        var speedUp = GetComponent<PlayerSpeedUp>();
+        float currentSpeed = moveSpeed * (speedUp != null ? speedUp.Multiplier : 1f);
+
+        Vector3 targetVelocity = move * currentSpeed;
+        
+        if (_isGrounded)
+        {
+            if (move.sqrMagnitude < 0.01f)
+            {
+                // Standing still — zero all velocity to prevent gravity from sliding the player down slopes
+                _rigidbody.linearVelocity = Vector3.zero;
+            }
+            else
+            {
+                // Project desired velocity onto the slope surface so the player follows the ramp
+                Vector3 slopeMove = Vector3.ProjectOnPlane(targetVelocity, groundHit.normal);
+
+                // Add a small extra upward push when climbing to overcome gravity
+                if (slopeMove.y > 0f)
+                    slopeMove.y += 2f;
+
+                _rigidbody.linearVelocity = slopeMove;
+            }
+        }
+        else
+        {
+            Vector3 v = _rigidbody.linearVelocity;
+            _rigidbody.linearVelocity = new Vector3(targetVelocity.x, v.y, targetVelocity.z);
+        }
     }
 
     private void LateUpdate()
@@ -38,10 +108,22 @@ public class PlayerMovement : MonoBehaviour
         if (facingVisual == null)
             return;
 
-        Vector3 planar = new Vector3(_rigidbody.linearVelocity.x, 0f, _rigidbody.linearVelocity.z);
-        if (planar.sqrMagnitude < facingMinSpeed * facingMinSpeed)
+        if (GameplayModeController.Instance != null && GameplayModeController.Instance.IsFirstPerson)
+        {
+            Vector3 f = GameplayModeController.Instance.GetFirstPersonPlanarForward();
+            facingVisual.rotation = Quaternion.LookRotation(f, Vector3.up);
+            return;
+        }
+
+        // Top-down: только по прицелу (курсор на земле), без автоповорота по скорости
+        if (!MouseGroundUtility.TryGetMouseGroundPoint(out Vector3 ground))
             return;
 
-        facingVisual.rotation = Quaternion.LookRotation(planar.normalized, Vector3.up);
+        Vector3 forward = ground - transform.position;
+        forward.y = 0f;
+        if (forward.sqrMagnitude < 0.0001f)
+            return;
+
+        facingVisual.rotation = Quaternion.LookRotation(forward.normalized, Vector3.up);
     }
 }

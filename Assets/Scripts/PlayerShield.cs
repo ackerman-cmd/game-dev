@@ -26,9 +26,14 @@ public class PlayerShield : MonoBehaviour
 
     private void Update()
     {
-        if (_shieldAction == null || Time.time < _nextAllowedTime)
+        if (Time.time < _nextAllowedTime)
             return;
-        if (_shieldAction.WasPressedThisFrame())
+            
+        bool triggered = false;
+        if (_shieldAction != null && _shieldAction.WasPressedThisFrame()) triggered = true;
+        if (_shieldAction == null && Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame) triggered = true;
+
+        if (triggered)
         {
             _shieldEndTime = Time.time + durationSeconds;
             _nextAllowedTime = Time.time + cooldownSeconds;

@@ -34,7 +34,37 @@ public class MeteorProjectile : MonoBehaviour
         }
 
         SpawnDebris(center);
+        SpawnExplosion(center);
+        CameraShake.TriggerShake(0.6f, 0.4f);
         Destroy(gameObject);
+    }
+
+    private void SpawnExplosion(Vector3 point)
+    {
+        var explosion = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        explosion.transform.position = point;
+        explosion.transform.localScale = Vector3.one * (_radius * 0.5f);
+        Destroy(explosion.GetComponent<Collider>());
+        
+        var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
+        mat.SetColor("_BaseColor", new Color(1f, 0.5f, 0.1f, 0.5f));
+        mat.EnableKeyword("_EMISSION");
+        mat.SetColor("_EmissionColor", new Color(1f, 0.3f, 0.05f) * 2f);
+        
+        mat.SetFloat("_Surface", 1);
+        mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+        mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+        mat.SetInt("_ZWrite", 0);
+        mat.DisableKeyword("_ALPHATEST_ON");
+        mat.EnableKeyword("_ALPHABLEND_ON");
+        mat.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+        mat.renderQueue = 3000;
+        
+        explosion.GetComponent<Renderer>().sharedMaterial = mat;
+        
+        var expand = explosion.AddComponent<ExplosionEffect>();
+        expand.targetScale = _radius * 2f;
+        expand.duration = 0.4f;
     }
 
     private void SpawnDebris(Vector3 point)

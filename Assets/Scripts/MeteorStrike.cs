@@ -37,7 +37,7 @@ public class MeteorStrike : MonoBehaviour
             return;
         if (Time.time < _nextMeteorAllowedTime)
             return;
-        if (_meteorAction.WasPressedThisFrame() && MouseGroundUtility.TryGetMouseGroundPoint(out Vector3 groundPoint))
+        if (_meteorAction.WasPressedThisFrame() && MouseGroundUtility.TryGetAimGroundPoint(out Vector3 groundPoint))
             StartCoroutine(MeteorRoutine(groundPoint));
     }
 
@@ -126,5 +126,13 @@ public class MeteorStrike : MonoBehaviour
             inner.SetColor("_EmissionColor", new Color(1f, 0.45f, 0.05f) * 2.2f);
 
         core.GetComponent<Renderer>().sharedMaterial = inner;
+
+        meteor.AddComponent<ProceduralFallAudio>();
+
+        var light = meteor.AddComponent<Light>();
+        light.type = LightType.Point;
+        light.color = new Color(1f, 0.5f, 0.1f);
+        light.range = 20f;
+        light.intensity = 15f;
     }
 }

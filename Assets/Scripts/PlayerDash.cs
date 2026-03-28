@@ -32,25 +32,42 @@ public class PlayerDash : MonoBehaviour
 
     private void Update()
     {
-        if (_dashAction == null || Time.time < _nextDashTime)
+        if (Time.time < _nextDashTime)
             return;
         if (Time.time < _dashEndTime)
             return;
-        if (!_dashAction.WasPressedThisFrame())
+            
+        bool triggered = false;
+        if (_dashAction != null && _dashAction.WasPressedThisFrame()) triggered = true;
+        if (_dashAction == null && Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame) triggered = true;
+
+        if (!triggered)
             return;
 
         Vector2 input = _moveAction != null ? _moveAction.ReadValue<Vector2>() : Vector2.zero;
-        Vector3 dir = new Vector3(input.x, 0f, input.y);
-        if (dir.sqrMagnitude < 0.01f)
+        Vector3 dir;
+        if (GameplayModeController.Instance != null && GameplayModeController.Instance.IsFirstPerson)
         {
-            var forward = transform.forward;
-            forward.y = 0f;
-            if (forward.sqrMagnitude < 0.01f)
-                forward = Vector3.forward;
-            dir = forward.normalized;
+            dir = GameplayModeController.Instance.GetFirstPersonPlanarMove(input);
+            if (dir.sqrMagnitude < 0.01f)
+                dir = GameplayModeController.Instance.GetFirstPersonPlanarForward();
+            else
+                dir.Normalize();
         }
         else
-            dir.Normalize();
+        {
+            dir = new Vector3(input.x, 0f, input.y);
+            if (dir.sqrMagnitude < 0.01f)
+            {
+                var forward = transform.forward;
+                forward.y = 0f;
+                if (forward.sqrMagnitude < 0.01f)
+                    forward = Vector3.forward;
+                dir = forward.normalized;
+            }
+            else
+                dir.Normalize();
+        }
 
         _dashPlanar = dir * dashSpeed;
         _dashEndTime = Time.time + dashDuration;

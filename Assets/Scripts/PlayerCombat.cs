@@ -8,8 +8,18 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private float projectileSpeed = 26f;
     [SerializeField] private float spawnHeight = 0.45f;
     [SerializeField] private float spawnForward = 0.9f;
+    [SerializeField] private float baseAttackCooldown = 0.15f;
+
+    private float _nextAttackTime;
+    private float _buffEndTime;
+    private float _buffedCooldown = 0.05f;
 
     private InputAction _attackAction;
+
+    public void BuffAttackSpeed(float duration)
+    {
+        _buffEndTime = Mathf.Max(_buffEndTime, Time.time + duration);
+    }
 
     private void Start()
     {
@@ -23,8 +33,14 @@ public class PlayerCombat : MonoBehaviour
     {
         if (_attackAction == null)
             return;
-        if (_attackAction.WasPressedThisFrame())
+
+        float currentCooldown = Time.time < _buffEndTime ? _buffedCooldown : baseAttackCooldown;
+
+        if (_attackAction.IsPressed() && Time.time >= _nextAttackTime)
+        {
             FireProjectile();
+            _nextAttackTime = Time.time + currentCooldown;
+        }
     }
 
     private void FireProjectile()
@@ -36,6 +52,20 @@ public class PlayerCombat : MonoBehaviour
 
     private Vector3 GetFireDirection()
     {
+        if (GameplayModeController.Instance != null && GameplayModeController.Instance.IsFirstPerson)
+        {
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                Vector3 f = cam.transform.forward;
+                f.y = 0f;
+                if (f.sqrMagnitude > 0.01f)
+                    return f.normalized;
+            }
+
+            return GameplayModeController.Instance.GetFirstPersonPlanarForward();
+        }
+
         if (MouseGroundUtility.TryGetMouseGroundPoint(out Vector3 ground))
         {
             Vector3 d = ground - transform.position;
@@ -68,6 +98,33 @@ public static class MouseGroundUtility
             return false;
 
         var ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+        return TryRayGroundIntersection(ray, out point, planeHeight);
+    }
+
+    /// <summary>Top-down: mouse ray. First-person: screen-center ray (where you look).</summary>
+    public static bool TryGetAimGroundPoint(out Vector3 point, float planeHeight = 0f)
+    {
+        point = default;
+        var cam = Camera.main;
+        if (cam == null)
+            return false;
+
+        Ray ray;
+        if (GameplayModeController.Instance != null && GameplayModeController.Instance.IsFirstPerson)
+            ray = cam.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f));
+        else
+        {
+            if (Mouse.current == null)
+                return false;
+            ray = cam.ScreenPointToRay(Mouse.current.position.ReadValue());
+        }
+
+        return TryRayGroundIntersection(ray, out point, planeHeight);
+    }
+
+    private static bool TryRayGroundIntersection(Ray ray, out Vector3 point, float planeHeight)
+    {
+        point = default;
         var plane = new Plane(Vector3.up, new Vector3(0f, planeHeight, 0f));
         if (!plane.Raycast(ray, out float enter))
             return false;
@@ -119,27 +176,27 @@ public class Projectile : MonoBehaviour
         var mat = new Material(lit);
         mat.name = "M_Projectile_Runtime";
         if (mat.HasProperty("_BaseColor"))
-            mat.SetColor("_BaseColor", new Color(0.25f, 0.92f, 1f));
+            mat.SetColor("_BaseColor", new Color(0.22f, 0.42f, 0.48f));
         else
-            mat.color = new Color(0.25f, 0.92f, 1f);
+            mat.color = new Color(0.22f, 0.42f, 0.48f);
         if (mat.HasProperty("_Metallic"))
-            mat.SetFloat("_Metallic", 0.15f);
+            mat.SetFloat("_Metallic", 0.35f);
         if (mat.HasProperty("_Smoothness"))
-            mat.SetFloat("_Smoothness", 0.88f);
+            mat.SetFloat("_Smoothness", 0.62f);
         mat.EnableKeyword("_EMISSION");
         if (mat.HasProperty("_EmissionColor"))
-            mat.SetColor("_EmissionColor", new Color(0.15f, 0.65f, 0.95f) * 1.6f);
+            mat.SetColor("_EmissionColor", new Color(0.1f, 0.28f, 0.34f) * 0.85f);
 
         go.GetComponent<Renderer>().sharedMaterial = mat;
 
         var trail = go.AddComponent<TrailRenderer>();
-        trail.time = 0.22f;
-        trail.startWidth = 0.11f;
+        trail.time = 0.2f;
+        trail.startWidth = 0.09f;
         trail.endWidth = 0.02f;
         trail.minVertexDistance = 0.03f;
         trail.material = mat;
-        trail.startColor = new Color(0.6f, 0.95f, 1f, 0.95f);
-        trail.endColor = new Color(0.2f, 0.4f, 1f, 0f);
+        trail.startColor = new Color(0.45f, 0.65f, 0.72f, 0.75f);
+        trail.endColor = new Color(0.15f, 0.22f, 0.28f, 0f);
 
         go.AddComponent<Rigidbody>();
         var proj = go.AddComponent<Projectile>();

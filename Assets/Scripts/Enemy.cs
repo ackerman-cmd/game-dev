@@ -21,6 +21,9 @@ public class Enemy : MonoBehaviour
     private Color _baseColor;
     private float _nextContactDamageTime;
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    
+    private float _slowMultiplier = 1f;
+    private float _slowEndTime;
 
     private void Awake()
     {
@@ -75,6 +78,9 @@ public class Enemy : MonoBehaviour
         if (_player == null)
             return;
 
+        if (Time.time > _slowEndTime)
+            _slowMultiplier = 1f;
+
         Vector3 dir = _player.position - transform.position;
         dir.y = 0f;
         if (dir.sqrMagnitude < 0.01f)
@@ -82,7 +88,14 @@ public class Enemy : MonoBehaviour
 
         dir.Normalize();
         Vector3 v = _rigidbody.linearVelocity;
-        _rigidbody.linearVelocity = new Vector3(dir.x * moveSpeed, v.y, dir.z * moveSpeed);
+        float currentSpeed = moveSpeed * _slowMultiplier;
+        _rigidbody.linearVelocity = new Vector3(dir.x * currentSpeed, v.y, dir.z * currentSpeed);
+    }
+
+    public void ApplySlow(float multiplier, float duration)
+    {
+        _slowMultiplier = multiplier;
+        _slowEndTime = Time.time + duration;
     }
 
     private void OnCollisionEnter(Collision collision)
