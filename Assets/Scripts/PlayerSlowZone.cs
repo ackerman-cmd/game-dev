@@ -65,29 +65,25 @@ public class SlowZoneEffect : MonoBehaviour
     public float duration;
     public float radius;
     public float slowMultiplier;
-    private float _spawnTime;
 
-    private void Start()
-    {
-        _spawnTime = Time.time;
-    }
+    private float _elapsed;
+    private readonly Collider[] _buffer = new Collider[64];
 
     private void Update()
     {
-        if (Time.time - _spawnTime > duration)
+        _elapsed += Time.deltaTime;
+        if (_elapsed > duration)
         {
             Destroy(gameObject);
             return;
         }
 
-        // Apply slow to enemies in radius
-        float sqrRadius = radius * radius;
-        foreach (var enemy in FindObjectsByType<Enemy>(FindObjectsSortMode.None))
+        int count = Physics.OverlapSphereNonAlloc(transform.position, radius, _buffer);
+        for (int i = 0; i < count; i++)
         {
-            if ((enemy.transform.position - transform.position).sqrMagnitude <= sqrRadius)
-            {
-                enemy.ApplySlow(slowMultiplier, 0.2f); // Apply slow for 0.2s, refreshed every frame
-            }
+            var enemy = _buffer[i].GetComponent<Enemy>();
+            if (enemy != null)
+                enemy.ApplySlow(slowMultiplier, 0.2f);
         }
     }
 }

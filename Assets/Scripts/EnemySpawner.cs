@@ -30,13 +30,17 @@ public class EnemySpawner : MonoBehaviour
     private int _spawnedInWave;
 
     private float _difficultyMultiplier = 1f;
+    private bool  _gameStarted;
 
     /// <summary>Current wave index (0 = before wave 1, then 1, 2, …).</summary>
     public int CurrentWave => _waveIndex;
 
+    /// <summary>Called by GameUI when the player picks a difficulty. Spawning only begins after this.</summary>
     public void SetDifficulty(float diff)
     {
         _difficultyMultiplier = diff;
+        _gameStarted = true;
+        _timer = delayBeforeFirstWave; // reset the initial countdown
     }
 
     private void Awake()
@@ -59,7 +63,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void Update()
     {
-        if (enemyPrefabs == null || enemyPrefabs.Length == 0)
+        if (!_gameStarted || enemyPrefabs == null || enemyPrefabs.Length == 0)
             return;
 
         switch (_phase)
@@ -108,13 +112,46 @@ public class EnemySpawner : MonoBehaviour
         if (CountEnemies() >= maxEnemies)
             return false;
 
-        Vector2 r = Random.insideUnitCircle * spawnRadius;
+        Vector2 r   = Random.insideUnitCircle * spawnRadius;
         Vector3 pos = new Vector3(r.x, 1f, r.y);
-        GameObject prefab = enemyPrefabs[Random.Range(0, enemyPrefabs.Length)];
+
+        GameObject prefab = SelectPrefab();
         if (prefab == null)
             return false;
-        Instantiate(prefab, pos, Quaternion.identity);
+
+        var spawned = Instantiate(prefab, pos, Quaternion.identity);
+
+        // Ranged variant: 28% of enemies from wave 4 onward
+        if (_waveIndex >= 4 && Random.value < 0.28f)
+            spawned.AddComponent<EnemyRanged>();
+
         return true;
+    }
+
+    private GameObject SelectPrefab()
+    {
+        if (enemyPrefabs == null || enemyPrefabs.Length == 0) return null;
+
+        // Gate enemy variety behind wave progression
+        int maxTypes;
+        if (_waveIndex <= 2)      maxTypes = 1;   // Stalker only
+        else if (_waveIndex <= 4) maxTypes = 2;   // Stalker + Brute
+        else                      maxTypes = enemyPrefabs.Length; // All types
+
+        maxTypes = Mathf.Min(maxTypes, enemyPrefabs.Length);
+
+        int index;
+        if (maxTypes == 1)
+            index = 0;
+        else if (maxTypes == 2)
+            index = Random.value < 0.65f ? 0 : 1;
+        else
+        {
+            float r = Random.value;
+            index = r < 0.50f ? 0 : r < 0.80f ? 1 : 2;
+        }
+
+        return enemyPrefabs[index];
     }
 
     private static int CountEnemies()

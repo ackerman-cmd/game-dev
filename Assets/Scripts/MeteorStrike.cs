@@ -15,9 +15,6 @@ public class MeteorStrike : MonoBehaviour
     [SerializeField] private float meteorSpawnHeight = 14f;
     [SerializeField] private float meteorBodyScale = 1.15f;
 
-    [Header("Indicator")]
-    [SerializeField] private Color indicatorColor = new Color(1f, 0.35f, 0.1f, 0.9f);
-
     private InputAction _meteorAction;
     private bool _casting;
     private float _nextMeteorAllowedTime;
@@ -45,27 +42,8 @@ public class MeteorStrike : MonoBehaviour
     {
         _casting = true;
 
-        var indicator = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        indicator.name = "MeteorIndicator";
-        indicator.transform.SetPositionAndRotation(new Vector3(groundPoint.x, 0.05f, groundPoint.z), Quaternion.identity);
-        indicator.transform.localScale = new Vector3(meteorRadius * 2f, 0.05f, meteorRadius * 2f);
-        Object.Destroy(indicator.GetComponent<Collider>());
-        var indRenderer = indicator.GetComponent<Renderer>();
-        if (indRenderer != null)
-            indRenderer.material.color = indicatorColor;
-
-        float t = 0f;
-        var baseScale = indicator.transform.localScale;
-        while (t < windupSeconds)
-        {
-            t += Time.deltaTime;
-            float pulse = 1f + 0.04f * Mathf.Sin(t * 14f);
-            indicator.transform.localScale = baseScale * pulse;
-            yield return null;
-        }
-
-        if (indicator != null)
-            Object.Destroy(indicator);
+        DangerZoneIndicator.Create(groundPoint, meteorRadius, windupSeconds);
+        yield return new WaitForSeconds(windupSeconds);
 
         var meteor = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         meteor.name = "Meteor";

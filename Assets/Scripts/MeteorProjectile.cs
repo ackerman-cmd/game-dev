@@ -8,14 +8,17 @@ public class MeteorProjectile : MonoBehaviour
 
     private float _damage;
     private float _radius;
+    private float _playerDamage;
     private bool _hit;
 
     private static Material s_debrisMat;
 
-    public void Configure(float damage, float radius)
+    /// <param name="playerDamage">Optional splash damage dealt to the player. Pass 0 (default) to exempt the player.</param>
+    public void Configure(float damage, float radius, float playerDamage = 0f)
     {
-        _damage = damage;
-        _radius = radius;
+        _damage       = damage;
+        _radius       = radius;
+        _playerDamage = playerDamage;
     }
 
     private void OnCollisionEnter(Collision collision)
@@ -26,11 +29,25 @@ public class MeteorProjectile : MonoBehaviour
 
         Vector3 center = transform.position;
 
+        bool playerHit = false;
         foreach (var c in Physics.OverlapSphere(center, _radius))
         {
             var enemy = c.GetComponent<Enemy>();
             if (enemy != null)
+            {
                 enemy.TakeDamage(_damage);
+                continue;
+            }
+
+            if (!playerHit && _playerDamage > 0f)
+            {
+                var ph = c.GetComponentInParent<PlayerHealth>();
+                if (ph != null && ph.IsAlive)
+                {
+                    ph.TakeDamage(_playerDamage);
+                    playerHit = true;
+                }
+            }
         }
 
         SpawnDebris(center);

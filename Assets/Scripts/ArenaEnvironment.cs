@@ -52,18 +52,27 @@ public class ArenaEnvironment : MonoBehaviour
             platform.transform.localScale = new Vector3(18f, pHeight / 2f, 18f); 
             Apply(platform.GetComponent<Renderer>(), mat);
 
-            // Ramps towards center
+            // Ramp: ground end at dir*8 (y≈0) → platform end at dir*18 (y=pHeight).
+            // Both endpoints are computed geometrically so the ramp lies flat on the ground
+            // at the bottom and flush with the platform top at the far end.
+            const float rampGroundDist = 8f;   // world units from arena origin
+            const float rampPlatDist   = 18f;  // inside the platform cylinder edge (dir*17)
+            const float rampGroundY    = 0.05f;
+            float       rampPlatY      = pHeight;
+            float       dH = rampPlatDist - rampGroundDist;   // 10
+            float       dV = rampPlatY    - rampGroundY;      // ≈3.45
+            float       rampLength = Mathf.Sqrt(dH * dH + dV * dV); // ≈10.6
+            float       rampAngle  = Mathf.Atan2(dV, dH) * Mathf.Rad2Deg; // ≈19°
+
             var ramp = GameObject.CreatePrimitive(PrimitiveType.Cube);
             ramp.name = $"Ramp_{i}";
             ramp.transform.SetParent(transform, false);
-            
-            ramp.transform.localScale = new Vector3(6f, 0.5f, 16f);
-            Vector3 rampPos = pos - dir * 11f; // pull inwards towards center
-            rampPos.y = pHeight / 2f - 0.2f; 
-            ramp.transform.position = rampPos;
-            
-            Quaternion lookCenter = Quaternion.LookRotation(-dir);
-            ramp.transform.rotation = lookCenter * Quaternion.Euler(14f, 0f, 0f); // Gentle slope
+            ramp.transform.localScale = new Vector3(8f, 0.5f, rampLength);
+            ramp.transform.position   = dir * ((rampGroundDist + rampPlatDist) * 0.5f)
+                                        + Vector3.up * ((rampGroundY + rampPlatY) * 0.5f);
+            // LookRotation(-dir): local +Z → toward arena center (ground end)
+            // Euler(+angle, 0, 0): tilts +Z end downward → ground end goes down, platform end goes up
+            ramp.transform.rotation = Quaternion.LookRotation(-dir) * Quaternion.Euler(rampAngle, 0f, 0f);
             Apply(ramp.GetComponent<Renderer>(), mat);
             
             // Add a glowing rim to platform
@@ -122,7 +131,7 @@ public class ArenaEnvironment : MonoBehaviour
         boundaryMat.SetFloat("_Metallic", 0.7f);
         boundaryMat.SetFloat("_Smoothness", 0.6f);
         boundaryMat.EnableKeyword("_EMISSION");
-        boundaryMat.SetColor("_EmissionColor", new Color(0.05f, 0.2f, 0.3f) * 1.5f);
+        boundaryMat.SetColor("_EmissionColor", new Color(0.06f, 0.28f, 0.46f) * 3f);
 
         for (int i = 0; i < 36; i++)
         {
@@ -132,8 +141,8 @@ public class ArenaEnvironment : MonoBehaviour
             var pillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             pillar.name = $"Boundary_Pillar_{i}";
             pillar.transform.SetParent(transform, false);
-            pillar.transform.position = pos + Vector3.up * 2f;
-            pillar.transform.localScale = new Vector3(1.5f, 2f, 1.5f);
+            pillar.transform.position = pos + Vector3.up * 4f;
+            pillar.transform.localScale = new Vector3(1.6f, 4f, 1.6f);
             
             Apply(pillar.GetComponent<Renderer>(), boundaryMat);
         }

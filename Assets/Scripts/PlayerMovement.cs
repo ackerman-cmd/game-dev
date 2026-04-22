@@ -18,9 +18,9 @@ public class PlayerMovement : MonoBehaviour
         var playerInput = GetComponent<PlayerInput>();
         _moveAction = playerInput.actions.FindActionMap("Player").FindAction("Move");
         
-        // Physics settings for better climbing
         _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
         _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        _rigidbody.freezeRotation = true; // prevent tipping on ramps
     }
 
     private void Update()
@@ -89,9 +89,9 @@ public class PlayerMovement : MonoBehaviour
                 // Project desired velocity onto the slope surface so the player follows the ramp
                 Vector3 slopeMove = Vector3.ProjectOnPlane(targetVelocity, groundHit.normal);
 
-                // Add a small extra upward push when climbing to overcome gravity
+                // Extra upward push to overcome gravity while climbing
                 if (slopeMove.y > 0f)
-                    slopeMove.y += 2f;
+                    slopeMove.y += 3f;
 
                 _rigidbody.linearVelocity = slopeMove;
             }

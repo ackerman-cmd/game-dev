@@ -10,6 +10,9 @@ public class Enemy : MonoBehaviour
     [Header("Health")]
     [SerializeField] private float maxHealth = 40f;
 
+    [Header("Score")]
+    [SerializeField] private int pointValue = 10;
+
     [Header("Contact damage")]
     [SerializeField] private float contactDamage = 8f;
     [SerializeField] private float contactHitCooldown = 0.9f;
@@ -24,6 +27,8 @@ public class Enemy : MonoBehaviour
     
     private float _slowMultiplier = 1f;
     private float _slowEndTime;
+
+    public event System.Action<int> OnDied;
 
     private void Awake()
     {
@@ -121,7 +126,11 @@ public class Enemy : MonoBehaviour
         _health -= amount;
         HitFlash();
         if (_health <= 0f)
+        {
+            OnDied?.Invoke(pointValue);
+            ScoreTracker.Instance.RegisterKill(pointValue);
             Destroy(gameObject);
+        }
     }
 
     private void HitFlash()

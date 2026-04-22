@@ -14,6 +14,7 @@ public class PlayerHealth : MonoBehaviour
     private Color _baseColor;
     private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
 
+    private PlayerShield _shield;
     private Transform _hpBarFill;
     private float _invincibleEndTime;
 
@@ -27,6 +28,7 @@ public class PlayerHealth : MonoBehaviour
     private void Awake()
     {
         _current = maxHealth;
+        _shield  = GetComponent<PlayerShield>();
         var hull = transform.Find("VisualRoot/PlayerHull");
         _renderer = hull != null ? hull.GetComponent<Renderer>() : GetComponentInChildren<Renderer>();
         if (_renderer != null && _renderer.material.HasProperty(BaseColorId))
@@ -93,6 +95,9 @@ public class PlayerHealth : MonoBehaviour
     {
         if (_current <= 0f || amount <= 0f || Time.time < _invincibleEndTime)
             return;
+
+        if (_shield != null)
+            amount *= _shield.DamageMultiplier;
 
         _current = Mathf.Max(0f, _current - amount);
         OnDamaged?.Invoke(amount);
