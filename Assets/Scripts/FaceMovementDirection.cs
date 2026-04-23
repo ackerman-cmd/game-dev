@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Rotates a child visual toward planar rigidbody velocity so facing matches movement (top-down readable).
-/// </summary>
 [RequireComponent(typeof(Rigidbody))]
 public class FaceMovementDirection : MonoBehaviour
 {

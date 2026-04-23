@@ -2,9 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Player hit points and death. Attach to the Player object.
-/// </summary>
 public class PlayerHealth : MonoBehaviour
 {
     [SerializeField] private float maxHealth = 100f;
@@ -67,7 +64,6 @@ public class PlayerHealth : MonoBehaviour
 
         _hpBarFill = fill.transform;
         
-        // Ensure bar always faces camera
         barRoot.AddComponent<FaceCamera>();
     }
 
@@ -106,8 +102,7 @@ public class PlayerHealth : MonoBehaviour
         if (_current <= 0f)
         {
             DisablePlayerControls();
-            
-            // Make sure the event goes out so GameUI can handle Game Over state
+
             if (OnDeath != null)
                 OnDeath.Invoke();
                 

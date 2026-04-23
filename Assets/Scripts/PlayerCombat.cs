@@ -15,6 +15,7 @@ public class PlayerCombat : MonoBehaviour
     private float _buffedCooldown = 0.05f;
 
     private InputAction _attackAction;
+    private ProceduralShootAudio _shootAudio;
 
     public void BuffAttackSpeed(float duration)
     {
@@ -27,6 +28,7 @@ public class PlayerCombat : MonoBehaviour
         _attackAction = playerInput.actions.FindActionMap("Player").FindAction("Attack", throwIfNotFound: false);
         if (_attackAction == null)
             Debug.LogWarning("PlayerCombat: действие 'Attack' не найдено в PlayerControls. Проверьте ассет и карту Player.");
+        _shootAudio = gameObject.AddComponent<ProceduralShootAudio>();
     }
 
     private void Update()
@@ -48,6 +50,7 @@ public class PlayerCombat : MonoBehaviour
         Vector3 dir = GetFireDirection();
         Vector3 spawn = transform.position + Vector3.up * spawnHeight + dir * spawnForward;
         Projectile.Create(spawn, dir, attackDamage, projectileSpeed);
+        _shootAudio?.TriggerShot();
     }
 
     private Vector3 GetFireDirection()
@@ -87,7 +90,6 @@ public class PlayerCombat : MonoBehaviour
     }
 }
 
-/// <summary>Точка на плоскости пола под курсором — для прицеливания сверху (общий хелпер для боя и метеора).</summary>
 public static class MouseGroundUtility
 {
     public static bool TryGetMouseGroundPoint(out Vector3 point, float planeHeight = 0f)
@@ -101,7 +103,6 @@ public static class MouseGroundUtility
         return TryRayGroundIntersection(ray, out point, planeHeight);
     }
 
-    /// <summary>Top-down: mouse ray. First-person: screen-center ray (where you look).</summary>
     public static bool TryGetAimGroundPoint(out Vector3 point, float planeHeight = 0f)
     {
         point = default;
@@ -134,7 +135,6 @@ public static class MouseGroundUtility
     }
 }
 
-/// <summary>Видимый снаряд с хвостом: летит по горизонтали, урон при столкновении с врагом или препятствием.</summary>
 [RequireComponent(typeof(Rigidbody))]
 public class Projectile : MonoBehaviour
 {

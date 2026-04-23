@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Short burst of speed in the current move direction. Encages repositioning between melee and meteor.
-/// </summary>
 [RequireComponent(typeof(Rigidbody), typeof(PlayerInput))]
 public class PlayerDash : MonoBehaviour
 {

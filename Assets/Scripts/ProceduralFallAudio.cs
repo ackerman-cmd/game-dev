@@ -3,7 +3,7 @@ using UnityEngine;
 public class ProceduralFallAudio : MonoBehaviour
 {
     private float _time;
-    private float _frequency = 800f; // Starts high, goes low
+    private float _frequency = 800f;
     private float _phase;
     private int _sampleRate;
 
@@ -27,13 +27,12 @@ public class ProceduralFallAudio : MonoBehaviour
         {
             _time += 1f / _sampleRate;
             
-            // Frequency drops over time
             _frequency = Mathf.Lerp(800f, 150f, _time * 0.5f);
             float phaseIncrement = _frequency * 2f * Mathf.PI / _sampleRate;
             _phase += phaseIncrement;
             if (_phase > Mathf.PI * 2f) _phase -= Mathf.PI * 2f;
 
-            float value = Mathf.Sin(_phase) * 0.2f; // simple sine wave
+            float value = Mathf.Sin(_phase) * 0.2f;
             
             for (int c = 0; c < channels; c++)
                 data[i + c] = value;

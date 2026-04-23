@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Animated ground circle that warns players of an incoming meteor impact.
-/// Transitions from yellow to red over its lifetime; auto-destroys on expiry.
-/// </summary>
 public class DangerZoneIndicator : MonoBehaviour
 {
     private float _duration;
@@ -71,7 +67,6 @@ public class DangerZoneIndicator : MonoBehaviour
         _elapsed += Time.deltaTime;
         float t = Mathf.Clamp01(_elapsed / _duration);
 
-        // Yellow → orange → red as impact approaches
         Color diskBase = Color.Lerp(new Color(1f, 0.88f, 0.08f, 0.14f), new Color(1f, 0.08f, 0.04f, 0.30f), t);
         Color ringBase = Color.Lerp(new Color(1f, 0.85f, 0.10f, 0.92f), new Color(1f, 0.08f, 0.04f, 1.00f), t);
         float pulse    = 1f + 0.7f * Mathf.Abs(Mathf.Sin(_elapsed * 10f));

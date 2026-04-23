@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Provides wave-contextual lore strings for the meteor-threat storyline.
-/// Auto-instantiates on first access; survives within one scene lifecycle.
-/// </summary>
 public class NarrativeSystem : MonoBehaviour
 {
     private static NarrativeSystem s_instance;

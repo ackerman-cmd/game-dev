@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Tracks enemy kills and score for the current session.
-/// Auto-instantiates on first access.
-/// </summary>
 public class ScoreTracker : MonoBehaviour
 {
     private static ScoreTracker s_instance;

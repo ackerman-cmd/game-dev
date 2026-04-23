@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>Top-down vs experimental first-person view. Keeps one active MainCamera and swaps cursor lock for FP.</summary>
 public class GameplayModeController : MonoBehaviour
 {
     public static GameplayModeController Instance { get; private set; }
@@ -103,7 +102,6 @@ public class GameplayModeController : MonoBehaviour
         cam.tag = isMain ? "MainCamera" : "Untagged";
     }
 
-    /// <summary>World-space planar move direction from WASD relative to first-person yaw (no strafe drift from pitch).</summary>
     public Vector3 GetFirstPersonPlanarMove(Vector2 moveInput)
     {
         if (firstPersonLookPivot == null)

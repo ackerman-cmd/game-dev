@@ -65,6 +65,6 @@ public class RuneSpawner : MonoBehaviour
         light.range = 5f;
         light.intensity = 5f;
         
-        Destroy(rune, 15f); // disappear if not picked up
+        Destroy(rune, 15f);
     }
 }

@@ -1,7 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>Mouse look on the FP pivot (yaw) and camera child (pitch). Only active while in first-person and cursor is locked.</summary>
 public class FirstPersonLook : MonoBehaviour
 {
     [SerializeField] private Transform yawPivot;

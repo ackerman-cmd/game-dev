@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Spawns enemies in discrete waves with a pause between waves. Difficulty scales with wave index.
-/// </summary>
 public class EnemySpawner : MonoBehaviour
 {
     [SerializeField] private GameObject[] enemyPrefabs;
@@ -32,15 +29,13 @@ public class EnemySpawner : MonoBehaviour
     private float _difficultyMultiplier = 1f;
     private bool  _gameStarted;
 
-    /// <summary>Current wave index (0 = before wave 1, then 1, 2, …).</summary>
     public int CurrentWave => _waveIndex;
 
-    /// <summary>Called by GameUI when the player picks a difficulty. Spawning only begins after this.</summary>
     public void SetDifficulty(float diff)
     {
         _difficultyMultiplier = diff;
         _gameStarted = true;
-        _timer = delayBeforeFirstWave; // reset the initial countdown
+        _timer = delayBeforeFirstWave;
     }
 
     private void Awake()
@@ -121,7 +116,6 @@ public class EnemySpawner : MonoBehaviour
 
         var spawned = Instantiate(prefab, pos, Quaternion.identity);
 
-        // Ranged variant: 28% of enemies from wave 4 onward
         if (_waveIndex >= 4 && Random.value < 0.28f)
             spawned.AddComponent<EnemyRanged>();
 
@@ -132,11 +126,10 @@ public class EnemySpawner : MonoBehaviour
     {
         if (enemyPrefabs == null || enemyPrefabs.Length == 0) return null;
 
-        // Gate enemy variety behind wave progression
         int maxTypes;
-        if (_waveIndex <= 2)      maxTypes = 1;   // Stalker only
-        else if (_waveIndex <= 4) maxTypes = 2;   // Stalker + Brute
-        else                      maxTypes = enemyPrefabs.Length; // All types
+        if (_waveIndex <= 2)      maxTypes = 1;
+        else if (_waveIndex <= 4) maxTypes = 2;
+        else                      maxTypes = enemyPrefabs.Length;
 
         maxTypes = Mathf.Min(maxTypes, enemyPrefabs.Length);
 

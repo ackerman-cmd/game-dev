@@ -1,12 +1,6 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
-/// Environmental hazard: periodically drops randomly-placed meteors on the arena.
-/// Each impact is preceded by a DangerZoneIndicator warning.
-/// Activates after wave 2; frequency and count scale with wave number.
-/// Auto-instantiates via RuntimeInitializeOnLoadMethod — no scene setup required.
-/// </summary>
 public class AmbientMeteorShower : MonoBehaviour
 {
     [SerializeField] private float arenaRadius    = 27f;
@@ -88,7 +82,6 @@ public class AmbientMeteorShower : MonoBehaviour
         trail.endColor          = new Color(0.4f, 0.08f, 0f, 0f);
         trail.material          = meteor.GetComponent<Renderer>().sharedMaterial;
 
-        // Damages enemies and player (ambient meteors deal reduced player damage)
         meteor.AddComponent<MeteorProjectile>().Configure(meteorDamage, meteorRadius, meteorDamage * 0.55f);
     }
 

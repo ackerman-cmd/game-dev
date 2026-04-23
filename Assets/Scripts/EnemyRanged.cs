@@ -1,10 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Adds ranged projectile attacks to an enemy. Attach alongside the Enemy component.
-/// The enemy continues to walk toward the player; this component fires on a separate cooldown.
-/// Added at runtime by EnemySpawner on wave 4+ enemies.
-/// </summary>
 [RequireComponent(typeof(Enemy))]
 public class EnemyRanged : MonoBehaviour
 {
@@ -47,10 +42,6 @@ public class EnemyRanged : MonoBehaviour
     }
 }
 
-/// <summary>
-/// A projectile fired by a ranged enemy. Damages the player on contact.
-/// Destroys itself on any collision except other enemies.
-/// </summary>
 public class EnemyProjectile : MonoBehaviour
 {
     private float _damage;
@@ -65,7 +56,7 @@ public class EnemyProjectile : MonoBehaviour
 
         var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
         go.name = "EnemyProjectile";
-        go.tag  = "Enemy";   // prevents friendly-fire with other enemies
+        go.tag  = "Enemy";
         go.transform.position   = position;
         go.transform.localScale = Vector3.one * 0.24f;
 

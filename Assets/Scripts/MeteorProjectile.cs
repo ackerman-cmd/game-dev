@@ -13,7 +13,6 @@ public class MeteorProjectile : MonoBehaviour
 
     private static Material s_debrisMat;
 
-    /// <param name="playerDamage">Optional splash damage dealt to the player. Pass 0 (default) to exempt the player.</param>
     public void Configure(float damage, float radius, float playerDamage = 0f)
     {
         _damage       = damage;

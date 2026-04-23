@@ -35,13 +35,12 @@ public class PlayerSlowZone : MonoBehaviour
         zone.transform.position = transform.position + Vector3.up * 0.05f;
         zone.transform.localScale = new Vector3(zoneRadius * 2, 0.05f, zoneRadius * 2);
         
-        Destroy(zone.GetComponent<Collider>()); // No physical collision
+        Destroy(zone.GetComponent<Collider>());
 
         var renderer = zone.GetComponent<Renderer>();
         var mat = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
         mat.SetColor("_BaseColor", new Color(0.2f, 0.6f, 0.8f, 0.4f));
-        
-        // Setup transparency
+
         mat.SetFloat("_Surface", 1);
         mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
         mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);

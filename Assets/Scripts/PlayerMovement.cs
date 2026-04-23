@@ -17,22 +17,22 @@ public class PlayerMovement : MonoBehaviour
         _rigidbody = GetComponent<Rigidbody>();
         var playerInput = GetComponent<PlayerInput>();
         _moveAction = playerInput.actions.FindActionMap("Player").FindAction("Move");
-        
+
         _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
         _rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
-        _rigidbody.freezeRotation = true; // prevent tipping on ramps
+        _rigidbody.freezeRotation = true;
     }
 
     private void Update()
     {
-        if (Time.timeScale == 0f) return; // Prevent jump while paused
+        if (Time.timeScale == 0f) return;
 
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame && _isGrounded)
         {
             Vector3 v = _rigidbody.linearVelocity;
-            _rigidbody.linearVelocity = new Vector3(v.x, 0f, v.z); // reset vertical before jump
+            _rigidbody.linearVelocity = new Vector3(v.x, 0f, v.z);
             _rigidbody.AddForce(Vector3.up * jumpForce, ForceMode.VelocityChange);
-            _isGrounded = false; // Force jump unground
+            _isGrounded = false;
         }
     }
 
@@ -41,15 +41,13 @@ public class PlayerMovement : MonoBehaviour
         if (_moveAction == null)
             return;
 
-        // SphereCast is much more reliable for detecting ground on ramps than a thin Raycast.
         RaycastHit[] hits = Physics.SphereCastAll(transform.position + Vector3.up * 0.5f, 0.4f, Vector3.down, 0.8f);
         _isGrounded = false;
         RaycastHit groundHit = default;
         float highestY = -999f;
-        
+
         foreach (var h in hits)
         {
-            // Ignore triggers and the player itself
             if (!h.collider.isTrigger && h.collider.gameObject != gameObject && !h.collider.transform.IsChildOf(transform))
             {
                 if (h.point.y > highestY)
@@ -76,20 +74,17 @@ public class PlayerMovement : MonoBehaviour
         float currentSpeed = moveSpeed * (speedUp != null ? speedUp.Multiplier : 1f);
 
         Vector3 targetVelocity = move * currentSpeed;
-        
+
         if (_isGrounded)
         {
             if (move.sqrMagnitude < 0.01f)
             {
-                // Standing still — zero all velocity to prevent gravity from sliding the player down slopes
                 _rigidbody.linearVelocity = Vector3.zero;
             }
             else
             {
-                // Project desired velocity onto the slope surface so the player follows the ramp
                 Vector3 slopeMove = Vector3.ProjectOnPlane(targetVelocity, groundHit.normal);
 
-                // Extra upward push to overcome gravity while climbing
                 if (slopeMove.y > 0f)
                     slopeMove.y += 3f;
 
@@ -115,7 +110,6 @@ public class PlayerMovement : MonoBehaviour
             return;
         }
 
-        // Top-down: только по прицелу (курсор на земле), без автоповорота по скорости
         if (!MouseGroundUtility.TryGetMouseGroundPoint(out Vector3 ground))
             return;
 

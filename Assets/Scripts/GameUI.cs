@@ -1,10 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// HUD through IMGUI: start menu with lore intro, wave-announcement banners,
-/// in-game status panel with score, and a game-over screen.
-/// </summary>
 public class GameUI : MonoBehaviour
 {
     private PlayerHealth _player;
@@ -20,7 +16,6 @@ public class GameUI : MonoBehaviour
     private float _difficultyMultiplier = 1f;
     private bool _playerSubscribed;
 
-    // Wave announcement banner
     private int _lastAnnouncedWave = 0;
     private float _bannerEndTime   = -1f;
     private string _bannerTitle    = "";
@@ -45,7 +40,6 @@ public class GameUI : MonoBehaviour
 
     private void Awake()
     {
-        // Freeze immediately — before any other Start() can run the game
         Time.timeScale = 0f;
         _state = GameState.StartMenu;
     }
@@ -63,7 +57,6 @@ public class GameUI : MonoBehaviour
         TrySubscribePlayer();
     }
 
-    // Auto-creates GameUI if no instance exists in the scene.
     [UnityEngine.RuntimeInitializeOnLoadMethod(UnityEngine.RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void AutoCreate()
     {
@@ -90,7 +83,6 @@ public class GameUI : MonoBehaviour
     {
         if (_state == GameState.Playing)
         {
-            // Retry missing references (handles hot-reload and init-order edge cases)
             TrySubscribePlayer();
             if (_spawner  == null) _spawner  = Object.FindFirstObjectByType<EnemySpawner>();
             if (_meteor   == null) _meteor   = Object.FindFirstObjectByType<MeteorStrike>();
@@ -99,11 +91,9 @@ public class GameUI : MonoBehaviour
             if (_speedUp  == null) _speedUp  = Object.FindFirstObjectByType<PlayerSpeedUp>();
             if (_slowZone == null) _slowZone = Object.FindFirstObjectByType<PlayerSlowZone>();
 
-            // Fallback death detection in case the OnDeath event was missed
             if (_player != null && !_player.IsAlive)
                 HandlePlayerDeath();
 
-            // Wave announcement banner
             if (_spawner != null && _spawner.CurrentWave > _lastAnnouncedWave)
             {
                 _lastAnnouncedWave = _spawner.CurrentWave;
@@ -141,7 +131,6 @@ public class GameUI : MonoBehaviour
         };
         labelStyle.normal.textColor = textMuted;
 
-        // ── START MENU ──────────────────────────────────────────────────────────
         if (_state == GameState.StartMenu)
         {
             Cursor.lockState = CursorLockMode.None;
@@ -157,7 +146,6 @@ public class GameUI : MonoBehaviour
             DrawRect(new Rect(bx, by, w, 3f), new Color(0.3f, 0.6f, 0.85f, 0.9f));
             DrawRect(new Rect(bx, by + h - 3f, w, 3f), new Color(0.3f, 0.6f, 0.85f, 0.35f));
 
-            // Title
             var titleSt = new GUIStyle(GUI.skin.label)
             {
                 fontSize  = Mathf.RoundToInt(34f * s),
@@ -167,7 +155,6 @@ public class GameUI : MonoBehaviour
             titleSt.normal.textColor = new Color(0.85f, 0.93f, 1f, 1f);
             GUI.Label(new Rect(bx, by + 18f * s, w, 52f * s), "METEOR ARENA", titleSt);
 
-            // Lore intro
             var loreSt = new GUIStyle(GUI.skin.label)
             {
                 fontSize  = Mathf.RoundToInt(13f * s),
@@ -178,7 +165,6 @@ public class GameUI : MonoBehaviour
             GUI.Label(new Rect(bx + 20f * s, by + 76f * s, w - 40f * s, 60f * s),
                 NarrativeSystem.IntroLore, loreSt);
 
-            // Difficulty label
             var subSt = new GUIStyle(loreSt) { fontSize = Mathf.RoundToInt(14f * s) };
             subSt.normal.textColor = textMuted;
             GUI.Label(new Rect(bx, by + 148f * s, w, 26f * s), "Choose difficulty", subSt);
@@ -198,7 +184,6 @@ public class GameUI : MonoBehaviour
             return;
         }
 
-        // ── GAME OVER ────────────────────────────────────────────────────────────
         if (_state == GameState.GameOver)
         {
             Cursor.lockState = CursorLockMode.None;
@@ -250,7 +235,6 @@ public class GameUI : MonoBehaviour
             return;
         }
 
-        // ── HUD (Playing) ────────────────────────────────────────────────────────
         float panelW = 300f * s;
         float lineH  = 22f * s;
         float barH   = 7f  * s;
@@ -271,7 +255,6 @@ public class GameUI : MonoBehaviour
         GUI.Label(new Rect(pad + 10f * s, y, panelW - 20f * s, lineH), "STATUS", titleStyle);
         y += lineH * 0.85f;
 
-        // HP bar
         if (_player != null)
         {
             float max = Mathf.Max(1f, _player.MaxHealth);
@@ -297,7 +280,6 @@ public class GameUI : MonoBehaviour
             y += lineH * 1.05f;
         }
 
-        // Wave + level
         if (_spawner != null)
         {
             int level  = Mathf.Max(1, (_spawner.CurrentWave - 1) / 3 + 1);
@@ -308,14 +290,12 @@ public class GameUI : MonoBehaviour
             y += lineH * 1.05f;
         }
 
-        // Score
         var scoreSt = new GUIStyle(labelStyle);
         scoreSt.normal.textColor = new Color(0.72f, 0.90f, 0.60f, 1f);
         GUI.Label(new Rect(pad + 10f * s, y, panelW, lineH),
             $"Score {ScoreTracker.Instance.Score}   Kills {ScoreTracker.Instance.TotalKills}", scoreSt);
         y += lineH * 1.1f;
 
-        // Ability cooldowns
         if (_meteor != null)
         {
             float cd  = _meteor.CooldownRemaining;
@@ -359,7 +339,6 @@ public class GameUI : MonoBehaviour
                 d > 0.05f ? $"Slow Zone  {d:0.0}s" : "Slow Zone  READY", labelStyle);
         }
 
-        // ── Wave announcement banner ─────────────────────────────────────────────
         if (Time.time < _bannerEndTime)
         {
             float remaining = _bannerEndTime - Time.time;
@@ -370,7 +349,6 @@ public class GameUI : MonoBehaviour
             DrawWaveBanner(alpha, s);
         }
 
-        // ── Bottom hint bar ──────────────────────────────────────────────────────
         float hintH   = 28f * s;
         var hintRect  = new Rect(pad, Screen.height - hintH - pad, 560f * s, hintH);
         DrawRect(hintRect, new Color(0.05f, 0.06f, 0.08f, 0.55f));

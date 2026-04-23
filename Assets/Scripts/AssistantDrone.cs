@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// A companion drone that follows the player and shoots at the nearest enemy.
-/// </summary>
 public class AssistantDrone : MonoBehaviour
 {
     [Header("Movement")]
@@ -40,21 +37,18 @@ public class AssistantDrone : MonoBehaviour
 
         _time += Time.deltaTime;
 
-        // Hover movement
         Vector3 targetPos = _playerTarget.position + new Vector3(
-            Mathf.Cos(_time * 0.5f) * hoverRadius, 
-            hoverHeight + Mathf.Sin(_time * hoverFrequency) * hoverAmplitude, 
+            Mathf.Cos(_time * 0.5f) * hoverRadius,
+            hoverHeight + Mathf.Sin(_time * hoverFrequency) * hoverAmplitude,
             Mathf.Sin(_time * 0.5f) * hoverRadius);
 
         transform.position = Vector3.Lerp(transform.position, targetPos, Time.deltaTime * followSpeed);
 
-        // Combat
         if (Time.time >= _nextAttackTime)
         {
             Enemy nearest = FindNearestEnemy();
             if (nearest != null)
             {
-                // Face enemy
                 Vector3 dir = nearest.transform.position - transform.position;
                 dir.y = 0;
                 if (dir.sqrMagnitude > 0.01f)
@@ -67,7 +61,6 @@ public class AssistantDrone : MonoBehaviour
             }
             else
             {
-                // Face forward if no enemies
                 Vector3 playerFwd = _playerTarget.forward;
                 playerFwd.y = 0;
                 if (playerFwd.sqrMagnitude > 0.01f)

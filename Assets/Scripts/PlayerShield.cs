@@ -1,9 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Temporary damage reduction — one simple defensive layer for crowded waves.
-/// </summary>
 [RequireComponent(typeof(PlayerInput))]
 public class PlayerShield : MonoBehaviour
 {

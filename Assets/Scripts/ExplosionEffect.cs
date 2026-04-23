@@ -17,7 +17,7 @@ public class ExplosionEffect : MonoBehaviour
         var renderer = GetComponent<Renderer>();
         if (renderer != null)
         {
-            _mat = renderer.material; // Gets instance
+            _mat = renderer.material;
             if (_mat.HasProperty("_BaseColor"))
                 _initialColor = _mat.GetColor("_BaseColor");
         }

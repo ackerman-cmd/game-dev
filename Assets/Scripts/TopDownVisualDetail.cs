@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Layers primitive "greebles" for a stronger top-down silhouette (rim, cockpit, thrusters / spikes).
-/// Typical arcade read: friendly = round + cool accents; enemies = angular / warm palette.
-/// </summary>
 [DefaultExecutionOrder(-200)]
 public class TopDownVisualDetail : MonoBehaviour
 {
@@ -112,8 +108,7 @@ public class TopDownVisualDetail : MonoBehaviour
             AddPrim(hull, "Detail_Cockpit", PrimitiveType.Sphere, new Vector3(0f, 0.3f, 0f), Vector3.one * 0.3f, s_playerCockpit);
             AddPrim(hull, "Detail_WingL", PrimitiveType.Cube, new Vector3(-0.5f, 0.14f, 0.02f), new Vector3(0.14f, 0.07f, 0.32f), s_trimHero);
             AddPrim(hull, "Detail_WingR", PrimitiveType.Cube, new Vector3(0.5f, 0.14f, 0.02f), new Vector3(0.14f, 0.07f, 0.32f), s_trimHero);
-            
-            // Add glowing core vents
+
             AddPrim(hull, "Detail_VentL", PrimitiveType.Cube, new Vector3(-0.35f, 0.2f, 0.1f), new Vector3(0.05f, 0.05f, 0.2f), s_playerThruster);
             AddPrim(hull, "Detail_VentR", PrimitiveType.Cube, new Vector3(0.35f, 0.2f, 0.1f), new Vector3(0.05f, 0.05f, 0.2f), s_playerThruster);
         }
@@ -121,8 +116,7 @@ public class TopDownVisualDetail : MonoBehaviour
         AddPrim(transform, "Detail_ThrusterL", PrimitiveType.Cube, new Vector3(-0.16f, 0.06f, -0.62f), new Vector3(0.14f, 0.1f, 0.22f), s_playerThruster);
         AddPrim(transform, "Detail_ThrusterR", PrimitiveType.Cube, new Vector3(0.16f, 0.06f, -0.62f), new Vector3(0.14f, 0.1f, 0.22f), s_playerThruster);
         AddPrim(transform, "Detail_Spine", PrimitiveType.Cube, new Vector3(0f, 0.2f, -0.08f), new Vector3(0.35f, 0.08f, 0.55f), s_trimHero);
-        
-        // Add armor plating
+
         AddPrim(transform, "Detail_ArmorFront", PrimitiveType.Cube, new Vector3(0f, 0.15f, 0.45f), new Vector3(0.4f, 0.1f, 0.2f), s_trimHero);
     }
 
@@ -137,8 +131,7 @@ public class TopDownVisualDetail : MonoBehaviour
             AddPrim(body, "Detail_SpikeL", PrimitiveType.Cube, new Vector3(-0.32f, 0.38f, 0f), new Vector3(0.1f, 0.22f, 0.12f), s_trimEnemy);
             AddPrim(body, "Detail_SpikeR", PrimitiveType.Cube, new Vector3(0.32f, 0.38f, 0f), new Vector3(0.1f, 0.22f, 0.12f), s_trimEnemy);
             AddPrim(body, "Detail_Spine", PrimitiveType.Cube, new Vector3(0f, 0.15f, -0.18f), new Vector3(0.22f, 0.35f, 0.2f), s_trimEnemy);
-            
-            // Extra aggressive details
+
             AddPrim(body, "Detail_Eye", PrimitiveType.Cube, new Vector3(0f, 0.62f, 0.14f), new Vector3(0.15f, 0.08f, 0.1f), s_glowEnemyHot);
             AddPrim(body, "Detail_Blade", PrimitiveType.Cube, new Vector3(0f, 0.4f, 0.25f), new Vector3(0.05f, 0.4f, 0.15f), s_trimEnemy);
         }
@@ -153,8 +146,7 @@ public class TopDownVisualDetail : MonoBehaviour
             AddPrim(torso, "Detail_ArmR", PrimitiveType.Cube, new Vector3(0.72f, 0f, 0f), new Vector3(0.38f, 0.22f, 0.22f), s_trimEnemy);
             AddPrim(torso, "Detail_Belt", PrimitiveType.Cube, new Vector3(0f, -0.18f, 0f), new Vector3(1.05f, 0.1f, 0.88f), s_glowEnemyHot);
             AddPrim(torso, "Detail_Rivet", PrimitiveType.Cylinder, new Vector3(0.4f, 0.12f, 0.35f), new Vector3(0.14f, 0.06f, 0.14f), s_glowEnemyWarm);
-            
-            // Shoulder pads
+
             AddPrim(torso, "Detail_ShoulderL", PrimitiveType.Cube, new Vector3(-0.6f, 0.2f, 0f), new Vector3(0.3f, 0.3f, 0.3f), s_trimEnemy);
             AddPrim(torso, "Detail_ShoulderR", PrimitiveType.Cube, new Vector3(0.6f, 0.2f, 0f), new Vector3(0.3f, 0.3f, 0.3f), s_trimEnemy);
         }

@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Spawns non-colliding edge props and old impact marks. Keeps the center of the arena clear.
-/// Walls are authored in the scene; this only adds modular decoration at runtime.
-/// </summary>
 public class ArenaEnvironment : MonoBehaviour
 {
     [SerializeField] private Material crateMaterial;
@@ -35,10 +31,9 @@ public class ArenaEnvironment : MonoBehaviour
         mat.SetFloat("_Smoothness", 0.5f);
         mat.EnableKeyword("_EMISSION");
         mat.SetColor("_EmissionColor", new Color(0.02f, 0.05f, 0.08f));
-        
+
         float pHeight = 3.5f;
 
-        // 4 corner platforms
         for (int i = 0; i < 4; i++)
         {
             float angle = (i * 90f + 45f) * Mathf.Deg2Rad;
@@ -49,20 +44,17 @@ public class ArenaEnvironment : MonoBehaviour
             platform.name = $"Platform_{i}";
             platform.transform.SetParent(transform, false);
             platform.transform.position = pos + Vector3.up * (pHeight / 2f);
-            platform.transform.localScale = new Vector3(18f, pHeight / 2f, 18f); 
+            platform.transform.localScale = new Vector3(18f, pHeight / 2f, 18f);
             Apply(platform.GetComponent<Renderer>(), mat);
 
-            // Ramp: ground end at dir*8 (y≈0) → platform end at dir*18 (y=pHeight).
-            // Both endpoints are computed geometrically so the ramp lies flat on the ground
-            // at the bottom and flush with the platform top at the far end.
-            const float rampGroundDist = 8f;   // world units from arena origin
-            const float rampPlatDist   = 18f;  // inside the platform cylinder edge (dir*17)
+            const float rampGroundDist = 8f;
+            const float rampPlatDist   = 18f;
             const float rampGroundY    = 0.05f;
             float       rampPlatY      = pHeight;
-            float       dH = rampPlatDist - rampGroundDist;   // 10
-            float       dV = rampPlatY    - rampGroundY;      // ≈3.45
-            float       rampLength = Mathf.Sqrt(dH * dH + dV * dV); // ≈10.6
-            float       rampAngle  = Mathf.Atan2(dV, dH) * Mathf.Rad2Deg; // ≈19°
+            float       dH             = rampPlatDist - rampGroundDist;
+            float       dV             = rampPlatY    - rampGroundY;
+            float       rampLength     = Mathf.Sqrt(dH * dH + dV * dV);
+            float       rampAngle      = Mathf.Atan2(dV, dH) * Mathf.Rad2Deg;
 
             var ramp = GameObject.CreatePrimitive(PrimitiveType.Cube);
             ramp.name = $"Ramp_{i}";
@@ -70,12 +62,9 @@ public class ArenaEnvironment : MonoBehaviour
             ramp.transform.localScale = new Vector3(8f, 0.5f, rampLength);
             ramp.transform.position   = dir * ((rampGroundDist + rampPlatDist) * 0.5f)
                                         + Vector3.up * ((rampGroundY + rampPlatY) * 0.5f);
-            // LookRotation(-dir): local +Z → toward arena center (ground end)
-            // Euler(+angle, 0, 0): tilts +Z end downward → ground end goes down, platform end goes up
             ramp.transform.rotation = Quaternion.LookRotation(-dir) * Quaternion.Euler(rampAngle, 0f, 0f);
             Apply(ramp.GetComponent<Renderer>(), mat);
-            
-            // Add a glowing rim to platform
+
             var rim = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             rim.name = $"PlatformRim_{i}";
             rim.transform.SetParent(platform.transform, false);
@@ -98,7 +87,7 @@ public class ArenaEnvironment : MonoBehaviour
             obstacleMaterial.SetFloat("_Smoothness", 0.2f);
         }
 
-        Random.InitState(42); // deterministic
+        Random.InitState(42);
 
         for (int i = 0; i < obstacleCount; i++)
         {
@@ -109,7 +98,6 @@ public class ArenaEnvironment : MonoBehaviour
             root.transform.SetParent(transform, false);
             root.transform.position = pos;
 
-            // Create a compound rock shape
             int pieces = Random.Range(2, 5);
             for (int p = 0; p < pieces; p++)
             {
@@ -137,13 +125,13 @@ public class ArenaEnvironment : MonoBehaviour
         {
             float angle = i * 10f * Mathf.Deg2Rad;
             Vector3 pos = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * 36f;
-            
+
             var pillar = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
             pillar.name = $"Boundary_Pillar_{i}";
             pillar.transform.SetParent(transform, false);
             pillar.transform.position = pos + Vector3.up * 4f;
             pillar.transform.localScale = new Vector3(1.6f, 4f, 1.6f);
-            
+
             Apply(pillar.GetComponent<Renderer>(), boundaryMat);
         }
     }
